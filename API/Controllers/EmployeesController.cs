@@ -130,7 +130,7 @@ namespace API.Controllers
             }
             catch (ArgumentException ex)
             {
-                return CreateResponse(HttpStatusCode.NotFound, ex.Message);
+                return CreateResponse(HttpStatusCode.BadRequest, ex.Message);
             }
         }
 

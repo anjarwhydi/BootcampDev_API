@@ -24,7 +24,6 @@ namespace API.Repository
             {
                 throw new ArgumentException("Data not found.");
             }
-
             context.Employees.Remove(employee);
             return context.SaveChanges();
         }

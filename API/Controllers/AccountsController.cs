@@ -40,7 +40,7 @@ namespace API.Controllers
             return response;
         }
 
-        [HttpGet("login")]
+        [HttpPost("login")]
         public ActionResult login(string email, string password)
         {
             try
@@ -52,17 +52,17 @@ namespace API.Controllers
                 var result= repository.login(email, password);
                 if (result == false)
                 {
-                    return CreateResponse(HttpStatusCode.BadRequest, "Email or Password is wrong.");
+                    return CreateResponse(HttpStatusCode.Unauthorized, "Email or Password is wrong.");
                 }
                 return CreateResponse(HttpStatusCode.OK, "login successfully", email);
             }
             catch (ArgumentException ex)
             {
-                return CreateResponse(HttpStatusCode.NotFound, ex.Message);
+                return CreateResponse(HttpStatusCode.BadRequest, ex.Message);
             }
         }
 
-        [HttpGet("SendEmail")]
+        [HttpPost("SendEmail")]
         public ActionResult SendEmail(string email)
         {
             try
@@ -71,12 +71,16 @@ namespace API.Controllers
                 {
                     return CreateResponse(HttpStatusCode.BadRequest, "Email cannot be empty!");
                 }
-                repository.SendEmail(email);
+                var result = repository.SendEmail(email);
+                if (result == false)
+                {
+                    return CreateResponse(HttpStatusCode.BadRequest, "Email not found!");
+                }
                 return CreateResponse(HttpStatusCode.OK, "OTP has been sent!", email);
             }
             catch (ArgumentException ex)
             {
-                return CreateResponse(HttpStatusCode.NotFound, ex.Message);
+                return CreateResponse(HttpStatusCode.BadRequest, ex.Message);
             }
         }
 

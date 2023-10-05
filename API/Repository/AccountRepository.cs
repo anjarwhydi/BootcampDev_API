@@ -14,9 +14,17 @@ namespace API.Repository
         public bool login(string email, string password)
         {
             var data = context.Employees.FirstOrDefault(e => e.Email == email);
+            if (data == null)
+            {
+                return false;
+            }
             var account = context.Accounts.Single(a => a.NIK == data.NIK);
             bool validate = BCrypt.Net.BCrypt.EnhancedVerify(password, account.Password);
-            return validate;
+            if (validate == false)
+            {
+                return false;
+            }
+            return true;
         }
 
         public bool SendEmail(string email)
@@ -24,7 +32,7 @@ namespace API.Repository
             var data = context.Employees.FirstOrDefault(e => e.Email == email);
             if (data == null)
             {
-                throw new ArgumentException("Email not found");
+                return false;
             }
             var name = data.FirstName + " " + data.LastName;
             var mail = new MimeMessage();
@@ -35,7 +43,7 @@ namespace API.Repository
             mail.Subject = "Reset Password Notification";
             mail.Body = new TextPart(MimeKit.Text.TextFormat.Plain)
             {
-                Text = $"Hi {name}\r\nEnter this OTP code to verify your account\r\n{SendOTP}"
+                Text = $"Hi {name},\r\nEnter this OTP code to verify your account\r\n{SendOTP}"
             };
             using (var smtp = new SmtpClient())
             {
