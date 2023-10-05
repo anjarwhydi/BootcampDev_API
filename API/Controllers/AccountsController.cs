@@ -1,5 +1,5 @@
-﻿using API.Model;
-using API.Repository.Interface;
+﻿using API.Repository.Interface;
+using API.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -40,27 +40,27 @@ namespace API.Controllers
             return response;
         }
 
-        [HttpPost("login")]
-        public ActionResult login(string email, string password)
-        {
-            try
-            {
-                if (email == null && password == null)
-                {
-                    return CreateResponse(HttpStatusCode.BadRequest, "Email and password cannot be empty!");
-                }
-                var result= repository.login(email, password);
-                if (result == false)
-                {
-                    return CreateResponse(HttpStatusCode.Unauthorized, "Email or Password is wrong.");
-                }
-                return CreateResponse(HttpStatusCode.OK, "login successfully", email);
-            }
-            catch (ArgumentException ex)
-            {
-                return CreateResponse(HttpStatusCode.BadRequest, ex.Message);
-            }
-        }
+        //[HttpPost("login")]
+        //public ActionResult login(string email, string password)
+        //{
+        //    try
+        //    {
+        //        if (email == null && password == null)
+        //        {
+        //            return CreateResponse(HttpStatusCode.BadRequest, "Email and password cannot be empty!");
+        //        }
+        //        var result= repository.login(email, password);
+        //        if (result == false)
+        //        {
+        //            return CreateResponse(HttpStatusCode.Unauthorized, "Email or Password is wrong.");
+        //        }
+        //        return CreateResponse(HttpStatusCode.OK, "login successfully", email);
+        //    }
+        //    catch (ArgumentException ex)
+        //    {
+        //        return CreateResponse(HttpStatusCode.BadRequest, ex.Message);
+        //    }
+        //}
 
         [HttpPost("SendEmail")]
         public ActionResult SendEmail(string email)
@@ -84,12 +84,52 @@ namespace API.Controllers
             }
         }
 
-        [HttpPost("changepassword")]
-        public ActionResult ChangePasswordUsingOTP(string email, string otp, string newPassword, string checkPassword)
+        //[HttpPost("changepassword")]
+        //public ActionResult ChangePasswordUsingOTP(string email, string otp, string newPassword, string checkPassword)
+        //{
+        //    try
+        //    {
+        //        repository.ChangePasswordUsingOTP(email, otp, newPassword, checkPassword);
+        //        return CreateResponse(HttpStatusCode.OK, "Password has been changed!");
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return CreateResponse(HttpStatusCode.BadRequest, ex.Message);
+        //    }
+        //}
+
+        [HttpPost("login")]
+        public ActionResult Login(LoginVM login)
         {
             try
             {
-                repository.ChangePasswordUsingOTP(email, otp, newPassword, checkPassword);
+                if (login.email == null && login.password == null)
+                {
+                    return CreateResponse(HttpStatusCode.BadRequest, "Email and password cannot be empty!");
+                }
+                int result = repository.Login(login);
+                if (result == -1)
+                {
+                    return CreateResponse(HttpStatusCode.Unauthorized, "Email is wrong.");
+                }
+                if (result == 0)
+                {
+                    return CreateResponse(HttpStatusCode.Unauthorized, "Password is wrong.");
+                }
+                return CreateResponse(HttpStatusCode.OK, "Login successfully", login.email);
+            }
+            catch (ArgumentException ex)
+            {
+                return CreateResponse(HttpStatusCode.BadRequest, ex.Message);
+            }
+        }
+
+        [HttpPost("changepassword")]
+        public ActionResult ChangePassword(ChangePasswordVM change)
+        {
+            try
+            {
+                repository.ChangePasswordVM(change);
                 return CreateResponse(HttpStatusCode.OK, "Password has been changed!");
             }
             catch (Exception ex)

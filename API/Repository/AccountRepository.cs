@@ -1,6 +1,9 @@
-﻿using API.Repository.Interface;
+﻿using API.Model;
+using API.Repository.Interface;
+using API.ViewModels;
 using MailKit.Net.Smtp;
 using MimeKit;
+using static System.Net.WebRequestMethods;
 
 namespace API.Repository
 {
@@ -11,21 +14,21 @@ namespace API.Repository
         {
             this.context = context;
         }
-        public bool login(string email, string password)
-        {
-            var data = context.Employees.FirstOrDefault(e => e.Email == email);
-            if (data == null)
-            {
-                return false;
-            }
-            var account = context.Accounts.Single(a => a.NIK == data.NIK);
-            bool validate = BCrypt.Net.BCrypt.EnhancedVerify(password, account.Password);
-            if (validate == false)
-            {
-                return false;
-            }
-            return true;
-        }
+        //public bool login(string email, string password)
+        //{
+        //    var data = context.Employees.FirstOrDefault(e => e.Email == email);
+        //    if (data == null)
+        //    {
+        //        return false;
+        //    }
+        //    var account = context.Accounts.Single(a => a.NIK == data.NIK);
+        //    bool validate = BCrypt.Net.BCrypt.EnhancedVerify(password, account.Password);
+        //    if (validate == false)
+        //    {
+        //        return false;
+        //    }
+        //    return true;
+        //}
 
         public bool SendEmail(string email)
         {
@@ -74,15 +77,65 @@ namespace API.Repository
             var account = context.Accounts.FirstOrDefault(a => a.NIK == NIK);
             string otp = GenerateOTP();
             account.CreatedAt = DateTime.Now;
-            account.IsUsed = false;
             account.OTP = otp;
             context.SaveChanges();
             return otp;
         }
 
-        public int ChangePasswordUsingOTP(string email, string otp, string newPassword, string checkPassword)
+        //public int ChangePasswordUsingOTP(string email, string otp, string newPassword, string checkPassword)
+        //{
+        //    var data = context.Employees.FirstOrDefault(e => e.Email == email);
+        //    var account = context.Accounts.FirstOrDefault(a => a.NIK == data.NIK);
+
+        //    if (account == null)
+        //    {
+        //        throw new ArgumentException("Account not found");
+        //    }
+
+        //    if (account.OTP == otp)
+        //    {
+        //        if(newPassword != checkPassword){
+        //            throw new ArgumentException ("Check the password again!");
+        //        }
+        //        DateTime dateTime = DateTime.Now;
+        //        DateTime timeElapsed = account.CreatedAt.AddMinutes(5);
+        //        if(dateTime >= timeElapsed){
+        //            throw new ArgumentException("Re-send OTP");
+        //        }
+
+        //        if (account.IsUsed == true)
+        //        {
+        //            throw new ArgumentException("OTP already in use");
+        //        }
+        //        account.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(newPassword);
+        //        account.IsUsed = true;
+        //        return context.SaveChanges();
+        //    }
+        //    else
+        //    {
+        //        throw new ArgumentException("Incorrect OTP");
+        //    }
+        //}
+
+        public int Login(LoginVM login)
         {
-            var data = context.Employees.FirstOrDefault(e => e.Email == email);
+            var employee = context.Employees.SingleOrDefault(e => e.Email == login.email);
+            if (employee == null)
+            {
+                return -1;
+            }
+            var account = context.Accounts.SingleOrDefault(a => a.NIK == employee.NIK);
+            bool validate = BCrypt.Net.BCrypt.EnhancedVerify(login.password, account.Password);
+            if (validate == false)
+            {
+                return 0;
+            }
+            return 1;
+        }
+
+        public int ChangePasswordVM(ChangePasswordVM change)
+        {
+            var data = context.Employees.FirstOrDefault(e => e.Email == change.Email);
             var account = context.Accounts.FirstOrDefault(a => a.NIK == data.NIK);
 
             if (account == null)
@@ -90,14 +143,16 @@ namespace API.Repository
                 throw new ArgumentException("Account not found");
             }
 
-            if (account.OTP == otp)
+            if (account.OTP == change.OTP)
             {
-                if(newPassword != checkPassword){
-                    throw new ArgumentException ("Check the password again!");
+                if (change.NewPassword != change.CheckPassword)
+                {
+                    throw new ArgumentException("Check the password again!");
                 }
                 DateTime dateTime = DateTime.Now;
                 DateTime timeElapsed = account.CreatedAt.AddMinutes(5);
-                if(dateTime >= timeElapsed){
+                if (dateTime >= timeElapsed)
+                {
                     throw new ArgumentException("Re-send OTP");
                 }
 
@@ -105,7 +160,7 @@ namespace API.Repository
                 {
                     throw new ArgumentException("OTP already in use");
                 }
-                account.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(newPassword);
+                account.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(change.NewPassword);
                 account.IsUsed = true;
                 return context.SaveChanges();
             }
